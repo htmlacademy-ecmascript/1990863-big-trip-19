@@ -1,9 +1,9 @@
 import AbstractStatefulView from '../framework/view/abstract-stateful-view.js';
-import { upperFirstCase} from '../utils/common.js';
+import { upperFirstCase} from '../utils/point.js';
 import {OFFERTYPE, CITYS} from '../const.js';
 import { returnDestanition, returnAllDestanitions} from '../mock/destanition.js';
 import {humanizeDate, Format} from '../utils/point.js';
-import { returnOffers, returnThisOffer} from '../mock/offers-by-type.js';
+import { returnOffers} from '../mock/offers-by-type.js';
 import flatpickr from 'flatpickr';
 
 import 'flatpickr/dist/flatpickr.min.css';
@@ -40,7 +40,7 @@ function createOffers(type, offers) {
 
   function isOfferChecked(currentOffers, offer) {
     if(currentOffers) {
-      return currentOffers.find( (currentOffer) => currentOffer.title.toLowerCase() === offer.title.toLowerCase()) ;
+      return currentOffers.find( (currentOffer) => currentOffer === offer.id) ;
     } return '';
   }
 
@@ -48,7 +48,7 @@ function createOffers(type, offers) {
     (offer, index) =>
       `
       <div class="event__offer-selector">
-        <input class="event__offer-checkbox  visually-hidden" id="event-offer-luggage-${index}" type="checkbox" name="event-offer-luggage" ${isOfferChecked(offers, offer) ? 'checked' : ''} data-offer="${offer.title}">
+        <input class="event__offer-checkbox  visually-hidden" id="event-offer-luggage-${index}" type="checkbox" name="event-offer-luggage" ${isOfferChecked(offers, offer) ? 'checked' : ''}  data-type="${type}" data-offer-id="${offer.id}">
         <label class="event__offer-label" for="event-offer-luggage-${index}">
           <span class="event__offer-title">${offer.title}</span>
           &plus;&euro;&nbsp;
@@ -78,24 +78,24 @@ function createDestinationTemplate(destination) {
 }
 
 
-function createEditFormTemplate(data) {
-  const isNewPoint = !('id' in data);
-  const{basePrice, dateFrom, dateTo, destination, offers, type} = data;
+function createEditFormTemplate(point) {
+  const isNewPoint = !('id' in point);
+  const{basePrice, dateFrom, dateTo, destination, offers, type} = point;
   //console.log(basePrice, dateFrom, dateTo, destination, city, offers, type, cities);
   const offerTypes = createOfferTypes();
   const cityList = createListCities();
   const showOffers = createOffers(type, offers);
   const destinationInfo = createDestinationTemplate(destination);
-
+  const city = returnDestanition(destination) ? returnDestanition(destination).name : '';
   return(
     `<form class="event event--edit" action="#" method="post">
     <header class="event__header">
       <div class="event__type-wrapper">
-        <label class="event__type  event__type-btn" for="event-type-toggle-1">
+        <label class="event__type  event__type-btn" for="event-type-toggle-${point.id}">
           <span class="visually-hidden">Choose event type</span>
           <img class="event__type-icon" width="17" height="17" src="img/icons/${type}.png" alt="Event type icon">
         </label>
-        <input class="event__type-toggle  visually-hidden" id="event-type-toggle-1" type="checkbox">
+        <input class="event__type-toggle  visually-hidden" id="event-type-toggle-${point.id}" type="checkbox">
 
         <div class="event__type-list">
           <fieldset class="event__type-group">
@@ -106,11 +106,11 @@ function createEditFormTemplate(data) {
       </div>
 
       <div class="event__field-group  event__field-group--destination">
-        <label class="event__label  event__type-output" for="event-destination-1">
+        <label class="event__label  event__type-output" for="event-destination-${destination}">
           ${type}
         </label>
-        <input class="event__input  event__input--destination" id="event-destination-1" type="text" name="event-destination" value="${destination}" list="destination-list-1">
-        <datalist id="destination-list-1">
+        <input class="event__input  event__input--destination" id="event-destination-${destination}" type="text" name="event-destination" value="${city}" list="destination-list-${point.id}">
+        <datalist id="destination-list-${point.id}">
           ${cityList}
 
         </datalist>
@@ -125,11 +125,11 @@ function createEditFormTemplate(data) {
       </div>
 
       <div class="event__field-group  event__field-group--price">
-        <label class="event__label" for="event-price-1">
+        <label class="event__label" for="event-price-${point.id}">
           <span class="visually-hidden">Price</span>
           &euro;
         </label>
-        <input class="event__input  event__input--price" id="event-price-1" type="text" name="event-price" value="${basePrice}">
+        <input class="event__input  event__input--price" id="event-price-${point.id}" type="text" name="event-price" value="${basePrice}">
       </div>
 
       <button class="event__save-btn  btn  btn--blue" type="submit">Save</button>
@@ -290,21 +290,20 @@ export default class EditFormView extends AbstractStatefulView {
 
   #destinationChangeHandler = (evt) => {
     const destination = returnDestanition(evt.target.value);
-    if (destination === undefined) {
-      this.updateElement({ destination: evt.target.value });
-    } else {
-      this.updateElement({ destination: destination.name });
+    if(destination !== undefined) {
+      const destId = destination.id;
+      this.updateElement({ destination: destId });
     }
   };
 
   #offerChangeHandler = (evt) => {
     let selectedOffers = this._state.offers;
-    const offer = returnThisOffer(evt.target.dataset.offer);
+    const offerId = parseInt(evt.target.dataset.offerId, 10);
     if (evt.target.checked) {
-      selectedOffers.push(offer);
+      selectedOffers.push(offerId);
       selectedOffers.sort();
     } else {
-      selectedOffers = this._state.offers.filter((e) => e.title.toLowerCase() !== offer.title.toLowerCase());
+      selectedOffers = this._state.offers.filter((e) => e !== offerId);
     }
     this._setState({ offers: selectedOffers });
   };
