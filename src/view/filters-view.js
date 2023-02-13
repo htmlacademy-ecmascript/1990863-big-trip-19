@@ -1,26 +1,26 @@
 import AbstractView from '../framework/view/abstract-view.js';
 
-function createFilterItemTemplate(filter, isChecked){
-  const {name, count} = filter;
+function createFilterItemTemplate(filter, currentFilterType){
+  const {type, name, count} = filter;
 
   return (
     ` <div class="trip-filters__filter">
       <input
-        id="filter-${name}"
+        id="filter-${type}"
         class="trip-filters__filter-input  visually-hidden"
         type="radio"
         name="trip-filter"
-        value="${name}"
-        ${isChecked ? 'checked' : ''}
+        value="${type}"
+        ${type === currentFilterType ? 'checked' : ''}
         ${count === 0 ? 'disabled' : ''}>
-      <label class="trip-filters__filter-label" for="filter-${name}">${name}</label>
+      <label class="trip-filters__filter-label" for="filter-${type}">${name}</label>
     </div>`
   );
 }
 
-function createFiltersTemplate(filterItems) {
+function createFiltersTemplate(filterItems, currentFilterType) {
   const filterItemsTemplate = filterItems
-    .map((filter, index) => createFilterItemTemplate(filter, index === 0))
+    .map((filter) => createFilterItemTemplate(filter, currentFilterType))
     .join('');
 
   return(
@@ -34,35 +34,25 @@ function createFiltersTemplate(filterItems) {
 }
 export default class FiltersView extends AbstractView{
   #filters = null;
+  #currentFilter = null;
+  #handleFilterTypeChange = null;
 
-  constructor({filters}) {
+  constructor({filters, currentFilterType, onFilterTypeChange}) {
     super();
     this.#filters = filters;
+    this.#currentFilter = currentFilterType;
+    this.#handleFilterTypeChange = onFilterTypeChange;
+
+    this.element.addEventListener('change', this.#filterTypeChangeHandler);
   }
 
   get template() {
-    return createFiltersTemplate(this.#filters);
+    return createFiltersTemplate(this.#filters, this.#currentFilter);
   }
 
-
-  changeTextFilter() {
-    document.querySelector('form.trip-filters').addEventListener('change', this.#changeTextFilterHandler);
-  }
-
-  #changeTextFilterHandler = (evt) => {
-    const targetInput = evt.target;
-    const messageText = document.querySelector('.trip-events__msg');
-    if(targetInput.value === 'everything'){
-      messageText.textContent = 'Click New Event to create your first point';
-    }
-    if(targetInput.value === 'future'){
-      messageText.textContent = 'There are no future events now';
-    }
-    if(targetInput.value === 'present'){
-      messageText.textContent = 'There are no present events now';
-    }
-    if(targetInput.value === 'past'){
-      messageText.textContent = 'There are no past events now';
-    }
+  #filterTypeChangeHandler = (evt) => {
+    evt.preventDefault();
+    this.#handleFilterTypeChange(evt.target.value);
   };
+
 }

@@ -2,14 +2,26 @@ const CITYS = ['New York', 'Bishkek', 'Miami', 'Bologna', 'Vancouver'];
 const OFFERTYPE = ['taxi', 'bus', 'train', 'ship', 'drive', 'flight', 'check-in', 'sightseeing', 'restaurant'];
 
 const FilterType = {
-  everything: 'everything',
-  future: 'future',
-  present: 'present',
-  past: 'past',
+  EVERYTHING: 'everything',
+  FUTURE: 'future',
+  PRESENT: 'present',
+  PAST: 'past',
 };
 const SortType = {
   DAY: 'day',
   TIME: 'time',
   PRICE: 'price',
 };
-export {CITYS, OFFERTYPE, FilterType, SortType};
+
+const UserAction = {
+  UPDATE_POINT: 'UPDATE_POINT',
+  ADD_POINT: 'ADD_POINT',
+  DELETE_POINT: 'DELETE_POINT',
+};
+
+const UpdateType = {
+  PATCH: 'PATCH',
+  MINOR: 'MINOR',
+  MAJOR: 'MAJOR',
+};
+export {CITYS, OFFERTYPE, FilterType, SortType, UserAction, UpdateType};
